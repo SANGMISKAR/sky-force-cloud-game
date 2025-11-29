@@ -1,0 +1,53 @@
+name: Deploy Sky Force to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Get the Code
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    # 2. Set up Python
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    # 3. Install the Game Compiler
+    - name: Install Pygbag
+      run: |
+        python -m pip install --upgrade pip
+        pip install pygbag
+
+    # 4. Compile the Game (Build Step)
+    - name: Build WebAssembly
+      run: |
+        # Compiles main.py -> build/web/
+        pygbag --build $GITHUB_WORKSPACE/main.py
+
+    # 5. Inject your Cyberpunk HTML (The Polish)
+    - name: Inject Custom UI
+      run: |
+        # Overwrite the default index.html with your custom one
+        cp index.html build/web/index.html
+
+    # 6. Deploy to AWS S3
+    - name: Sync to S3 Bucket
+      uses: jakejarvis/s3-sync-action@master
+      with:
+        args: --acl public-read --follow-symlinks --delete
+      env:
+        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        SOURCE_DIR: 'build/web'
