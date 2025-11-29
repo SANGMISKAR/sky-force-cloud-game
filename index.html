@@ -37,7 +37,7 @@
         .log-info { color: #888; }
         .log-sys { color: #00d2ff; }
 
-        /* --- VISUAL EFFECTS (Stars & Scanlines) --- */
+        /* --- VISUAL EFFECTS --- */
         .stars, .stars2, .stars3 { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
         .stars { background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; animation: move-stars 200s linear infinite; }
         .stars2 { background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; animation: move-stars 100s linear infinite; opacity: 0.6; }
@@ -57,13 +57,11 @@
         .subtitle { font-size: 16px; color: #00d2ff; letter-spacing: 5px; margin-bottom: 50px; opacity: 0.8; }
         @keyframes pulse-glow { from { text-shadow: 0 0 20px #00d2ff; } to { text-shadow: 0 0 60px #00d2ff; } }
         
-        /* --- LOADING BAR --- */
         .loader-container { width: 300px; height: 4px; background: #333; border-radius: 2px; margin-bottom: 20px; overflow: hidden; }
         .loader-bar { width: 0%; height: 100%; background: #00d2ff; box-shadow: 0 0 10px #00d2ff; transition: width 0.2s; animation: load-anim 3s ease-out forwards; }
         @keyframes load-anim { 0% { width: 0%; } 50% { width: 60%; } 100% { width: 90%; } }
         #status-text { font-size: 12px; color: #888; letter-spacing: 2px; margin-bottom: 30px; }
 
-        /* --- BUTTONS --- */
         #btn-play { background: transparent; border: 2px solid #00d2ff; color: #00d2ff; padding: 15px 50px; font-family: 'Courier New', monospace; font-size: 20px; font-weight: bold; letter-spacing: 3px; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); transition: all 0.3s; display: none; }
         #btn-play:hover { background: #00d2ff; color: #000; box-shadow: 0 0 30px rgba(0, 210, 255, 0.8); }
         
@@ -72,7 +70,6 @@
     </style>
 
     <script type="application/javascript">
-        // 1. Logger Function
         function logToScreen(msg, type) {
             const consoleDiv = document.getElementById('debug-console');
             const line = document.createElement('div');
@@ -80,45 +77,33 @@
             
             if (type === 'error') {
                 line.className = 'log-err';
-                consoleDiv.style.display = 'block'; // Show console on error
+                consoleDiv.style.display = 'block'; 
                 document.getElementById('main-menu').style.display = 'none';
-            } else if (type === 'sys') {
-                line.className = 'log-sys';
             } else {
-                line.className = 'log-info';
+                line.className = (type === 'sys') ? 'log-sys' : 'log-info';
             }
             consoleDiv.appendChild(line);
-            consoleDiv.scrollTop = consoleDiv.scrollHeight;
-            console.log(msg); 
         }
 
-        // 2. Pygbag Configuration
         window.config = {
             xtermjs : "1",
-            _apk : "sky-force-cloud-game.apk", // MUST MATCH S3 FILENAME
+            _apk : "sky-force-cloud-game.apk", 
             _asset : "main.py",
             _sdl2 : "canvas",
             user_canvas : 0,
             gui_debug : 0,
             
-            // Redirect Python Output to Screen
-            print: function(text) { 
-                if (arguments.length > 1) text = Array.from(arguments).join(" ");
-                logToScreen(text, 'info'); 
-            },
-            printErr: function(text) {
-                if (arguments.length > 1) text = Array.from(arguments).join(" ");
-                logToScreen("[PYTHON ERROR] " + text, 'error');
-            }
+            // [FIX] Force engine to load from S3 bucket (Current Directory)
+            cdn : ".", 
+            
+            print: function(text) { logToScreen(text, 'info'); },
+            printErr: function(text) { logToScreen("[PYTHON ERROR] " + text, 'error'); }
         };
 
-        // 3. Browser Error Trap (404s, CORS, etc)
-        window.onerror = function(message, source, lineno, colno, error) {
-            logToScreen("[BROWSER ERROR] " + message, 'error');
-        };
+        window.onerror = function(message) { logToScreen("[BROWSER ERROR] " + message, 'error'); };
     </script>
 
-    <script src="https://pygame-web.github.io/archives/0.9/pythons.js" type="module"></script>
+    <script src="pythons.js" type="module"></script>
 </head>
 <body>
 
@@ -140,7 +125,6 @@
     </div>
 
     <canvas id="canvas" tabindex="0"></canvas>
-    
     <button id="btn-debug" onclick="toggleDebug()">SYSTEM LOGS</button>
 
     <script type="text/javascript">
