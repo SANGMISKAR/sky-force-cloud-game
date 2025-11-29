@@ -7,147 +7,114 @@
     <style>
         /* --- CORE LAYOUT --- */
         body { 
-            margin: 0; 
-            background: #020205; 
-            font-family: 'Courier New', monospace; 
-            overflow: hidden; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: white;
-            user-select: none;
+            margin: 0; background: #020205; font-family: 'Courier New', monospace; 
+            overflow: hidden; display: flex; justify-content: center; align-items: center; 
+            height: 100vh; color: white; user-select: none; 
         }
 
         /* --- THE GAME CANVAS --- */
         canvas {
-            display: block;
-            background-color: #000;
-            box-shadow: 0 0 100px rgba(0, 150, 255, 0.3);
-            transition: all 1s ease;
-            outline: none;
+            display: block; background-color: #000; 
+            box-shadow: 0 0 100px rgba(0, 150, 255, 0.3); transition: all 1s ease; outline: none; 
         }
 
-        /* --- BACKGROUND ANIMATION (CSS Stars) --- */
-        .stars, .stars2, .stars3 {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
+        /* --- DEBUG CONSOLE (Hidden System Log) --- */
+        #debug-console {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 0, 0, 0.95);
+            color: #00ff00;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            z-index: 100;
+            display: none; /* Hidden by default */
+            white-space: pre-wrap;
+            pointer-events: auto;
         }
+        .log-err { color: #ff3333; font-weight: bold; border-bottom: 1px solid #330000; padding: 2px 0; }
+        .log-info { color: #888; }
+        .log-sys { color: #00d2ff; }
+
+        /* --- VISUAL EFFECTS (Stars & Scanlines) --- */
+        .stars, .stars2, .stars3 { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
         .stars { background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; animation: move-stars 200s linear infinite; }
         .stars2 { background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; animation: move-stars 100s linear infinite; opacity: 0.6; }
         .stars3 { background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; animation: move-stars 50s linear infinite; opacity: 0.4; }
-
         @keyframes move-stars { from {background-position:0 0;} to {background-position:0 10000px;} }
 
-        /* --- CRT SCANLINE EFFECT --- */
         .scanlines {
             position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-            z-index: 20;
+            pointer-events: none; z-index: 20;
         }
 
-        /* --- MAIN MENU CONTAINER --- */
-        #main-menu {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(2, 2, 5, 0.85); /* Dark overlay */
-            backdrop-filter: blur(5px);
-            z-index: 10;
-            transition: opacity 0.8s ease;
-        }
-
-        /* --- LOGO TYPOGRAPHY --- */
-        h1.game-title {
-            font-size: 60px;
-            margin: 0 0 10px 0;
-            text-transform: uppercase;
-            letter-spacing: 10px;
-            color: #fff;
-            text-shadow: 
-                0 0 5px #fff,
-                0 0 10px #fff,
-                0 0 20px #00d2ff,
-                0 0 40px #00d2ff,
-                0 0 80px #00d2ff;
-            animation: pulse-glow 2s infinite alternate;
-        }
-        .subtitle {
-            font-size: 16px;
-            color: #00d2ff;
-            letter-spacing: 5px;
-            margin-bottom: 50px;
-            opacity: 0.8;
-        }
-
-        @keyframes pulse-glow {
-            from { text-shadow: 0 0 10px #fff, 0 0 20px #00d2ff; }
-            to { text-shadow: 0 0 20px #fff, 0 0 40px #00d2ff, 0 0 60px #00d2ff; }
-        }
-
+        /* --- MAIN MENU UI --- */
+        #main-menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(2, 2, 5, 0.85); backdrop-filter: blur(5px); z-index: 10; transition: opacity 0.8s ease; }
+        h1.game-title { font-size: 60px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 10px; color: #fff; text-shadow: 0 0 20px #00d2ff; animation: pulse-glow 2s infinite alternate; }
+        .subtitle { font-size: 16px; color: #00d2ff; letter-spacing: 5px; margin-bottom: 50px; opacity: 0.8; }
+        @keyframes pulse-glow { from { text-shadow: 0 0 20px #00d2ff; } to { text-shadow: 0 0 60px #00d2ff; } }
+        
         /* --- LOADING BAR --- */
-        .loader-container {
-            width: 300px;
-            height: 4px;
-            background: #333;
-            border-radius: 2px;
-            position: relative;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        .loader-bar {
-            width: 0%;
-            height: 100%;
-            background: #00d2ff;
-            box-shadow: 0 0 10px #00d2ff;
-            transition: width 0.2s;
-            animation: load-anim 3s ease-out forwards; /* Fake load animation */
-        }
-        @keyframes load-anim { 0% { width: 0%; } 50% { width: 60%; } 80% { width: 80%; } 100% { width: 90%; } }
+        .loader-container { width: 300px; height: 4px; background: #333; border-radius: 2px; margin-bottom: 20px; overflow: hidden; }
+        .loader-bar { width: 0%; height: 100%; background: #00d2ff; box-shadow: 0 0 10px #00d2ff; transition: width 0.2s; animation: load-anim 3s ease-out forwards; }
+        @keyframes load-anim { 0% { width: 0%; } 50% { width: 60%; } 100% { width: 90%; } }
+        #status-text { font-size: 12px; color: #888; letter-spacing: 2px; margin-bottom: 30px; }
 
-        #status-text {
-            font-size: 12px; color: #888; letter-spacing: 2px;
-            margin-bottom: 30px;
-        }
-
-        /* --- PLAY BUTTON --- */
-        #btn-play {
-            background: transparent;
-            border: 2px solid #00d2ff;
-            color: #00d2ff;
-            padding: 15px 50px;
-            font-family: 'Courier New', monospace;
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 3px;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
-            transition: all 0.3s;
-            display: none; /* Hidden until ready */
-        }
-        #btn-play:hover {
-            background: #00d2ff;
-            color: #000;
-            box-shadow: 0 0 30px rgba(0, 210, 255, 0.8);
-        }
-
+        /* --- BUTTONS --- */
+        #btn-play { background: transparent; border: 2px solid #00d2ff; color: #00d2ff; padding: 15px 50px; font-family: 'Courier New', monospace; font-size: 20px; font-weight: bold; letter-spacing: 3px; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); transition: all 0.3s; display: none; }
+        #btn-play:hover { background: #00d2ff; color: #000; box-shadow: 0 0 30px rgba(0, 210, 255, 0.8); }
+        
+        #btn-debug { position: fixed; bottom: 10px; right: 10px; opacity: 0.3; background: #333; color: white; border: none; padding: 5px 10px; font-size: 10px; cursor: pointer; z-index: 200; }
+        #btn-debug:hover { opacity: 1; }
     </style>
 
     <script type="application/javascript">
+        // 1. Logger Function
+        function logToScreen(msg, type) {
+            const consoleDiv = document.getElementById('debug-console');
+            const line = document.createElement('div');
+            line.textContent = "> " + msg;
+            
+            if (type === 'error') {
+                line.className = 'log-err';
+                consoleDiv.style.display = 'block'; // Show console on error
+                document.getElementById('main-menu').style.display = 'none';
+            } else if (type === 'sys') {
+                line.className = 'log-sys';
+            } else {
+                line.className = 'log-info';
+            }
+            consoleDiv.appendChild(line);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            console.log(msg); 
+        }
+
+        // 2. Pygbag Configuration
         window.config = {
             xtermjs : "1",
-            _apk : "sky-force-cloud-game.apk", // This MUST match your S3 file name exactly
+            _apk : "sky-force-cloud-game.apk", // MUST MATCH S3 FILENAME
             _asset : "main.py",
             _sdl2 : "canvas",
             user_canvas : 0,
             gui_debug : 0,
+            
+            // Redirect Python Output to Screen
+            print: function(text) { 
+                if (arguments.length > 1) text = Array.from(arguments).join(" ");
+                logToScreen(text, 'info'); 
+            },
+            printErr: function(text) {
+                if (arguments.length > 1) text = Array.from(arguments).join(" ");
+                logToScreen("[PYTHON ERROR] " + text, 'error');
+            }
+        };
+
+        // 3. Browser Error Trap (404s, CORS, etc)
+        window.onerror = function(message, source, lineno, colno, error) {
+            logToScreen("[BROWSER ERROR] " + message, 'error');
         };
     </script>
 
@@ -160,48 +127,44 @@
     <div class="stars3"></div>
     <div class="scanlines"></div>
 
+    <div id="debug-console">=== SYSTEM DIAGNOSTIC TOOL INITIALIZED ===<br>Waiting for Python Runtime...<br></div>
+    
     <div id="main-menu">
         <h1 class="game-title">SKY FORCE</h1>
         <div class="subtitle">CLOUD BATTLE EDITION</div>
-
         <div id="loading-ui">
-            <div class="loader-container">
-                <div id="loader-bar" class="loader-bar"></div>
-            </div>
+            <div class="loader-container"><div id="loader-bar" class="loader-bar"></div></div>
             <div id="status-text">INITIALIZING SYSTEMS...</div>
         </div>
-
         <button id="btn-play" onclick="startGame()">INITIATE LAUNCH</button>
     </div>
 
     <canvas id="canvas" tabindex="0"></canvas>
+    
+    <button id="btn-debug" onclick="toggleDebug()">SYSTEM LOGS</button>
 
     <script type="text/javascript">
         function startGame() {
-            // 1. Fade out the menu
             const menu = document.getElementById('main-menu');
             menu.style.opacity = '0';
-            
-            // 2. Remove menu from DOM after fade (so it doesn't block clicks)
-            setTimeout(() => {
-                menu.style.display = 'none';
-            }, 800);
-
-            // 3. Focus and Audio
+            setTimeout(() => { menu.style.display = 'none'; }, 800);
             const canvas = document.getElementById('canvas');
             canvas.focus();
             window.Module.resumeAudio(); 
         }
 
-        // Wait for Python to be ready
+        function toggleDebug() {
+            const d = document.getElementById('debug-console');
+            d.style.display = (d.style.display === 'none') ? 'block' : 'none';
+        }
+
         window.addEventListener("load", function() {
+            logToScreen("Page Loaded. Connecting to WASM...", 'sys');
+            
             window.addEventListener("pygbag_ready", function() {
-                // When Python is ready:
-                // 1. Finish the loading bar visual
+                logToScreen("Python Runtime Ready. Loading APK...", 'sys');
                 document.getElementById('loader-bar').style.width = '100%';
                 document.getElementById('loader-bar').style.animation = 'none';
-                
-                // 2. Hide loader, Show Button
                 setTimeout(() => {
                     document.getElementById('loading-ui').style.display = 'none';
                     document.getElementById('btn-play').style.display = 'block';
@@ -209,6 +172,5 @@
             });
         });
     </script>
-
 </body>
 </html>
