@@ -24,8 +24,8 @@
             display: block;
             background-color: #000;
             box-shadow: 0 0 100px rgba(0, 150, 255, 0.3);
-            /* Initially hidden or blurred until game starts for effect */
             transition: all 1s ease;
+            outline: none;
         }
 
         /* --- BACKGROUND ANIMATION (CSS Stars) --- */
@@ -139,6 +139,18 @@
         }
 
     </style>
+
+    <script type="application/javascript">
+        window.config = {
+            xtermjs : "1",
+            _apk : "sky-force-cloud-game.apk", // This MUST match your S3 file name exactly
+            _asset : "main.py",
+            _sdl2 : "canvas",
+            user_canvas : 0,
+            gui_debug : 0,
+        };
+    </script>
+
     <script src="https://pygame-web.github.io/archives/0.8/pythons.js" type="module"></script>
 </head>
 <body>
