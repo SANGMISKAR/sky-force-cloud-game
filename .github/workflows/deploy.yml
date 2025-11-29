@@ -39,22 +39,26 @@ jobs:
       run: |
         cp index.html build/web/index.html
 
-    # 6. [NEW STEP] Download Missing Engine Files Manually
-    - name: Fetch Runtime Engine (Self-Hosting)
+    # 6. [FIXED] Download Correct Engine Files (Version 0.9)
+    - name: Fetch Runtime Engine
       run: |
-        echo "Downloading offline engine files..."
+        echo "Downloading working engine files..."
         cd build/web
-        # Download the Python runtime (JS)
-        curl -O https://pygame-web.github.io/archives/0.8/pythons.js
-        # Download the Python Binary (WASM) - The Heavy Engine
-        curl -O https://pygame-web.github.io/archives/0.8/python311.wasm
-        ls -la # List files to prove they are there
+        
+        # Remove any broken files first
+        rm -f pythons.js python311.wasm
+        
+        # Download valid files from version 0.9 (Use -fL to fail on error)
+        curl -fL -o pythons.js https://pygame-web.github.io/archives/0.9/pythons.js
+        curl -fL -o python311.wasm https://pygame-web.github.io/archives/0.9/python311.wasm
+        
+        # Verify file sizes (For logs)
+        ls -lh
 
     # 7. Deploy to AWS S3
     - name: Sync to S3 Bucket
       uses: jakejarvis/s3-sync-action@master
       with:
-        # Uploads everything, including the new .wasm file
         args: --follow-symlinks --delete --region ap-south-1
       env:
         AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
