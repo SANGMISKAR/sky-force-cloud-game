@@ -39,12 +39,22 @@ jobs:
       run: |
         cp index.html build/web/index.html
 
-    # 6. Deploy to AWS S3 (FIXED: Removed ACL)
+    # 6. [NEW STEP] Download Missing Engine Files Manually
+    - name: Fetch Runtime Engine (Self-Hosting)
+      run: |
+        echo "Downloading offline engine files..."
+        cd build/web
+        # Download the Python runtime (JS)
+        curl -O https://pygame-web.github.io/archives/0.8/pythons.js
+        # Download the Python Binary (WASM) - The Heavy Engine
+        curl -O https://pygame-web.github.io/archives/0.8/python311.wasm
+        ls -la # List files to prove they are there
+
+    # 7. Deploy to AWS S3
     - name: Sync to S3 Bucket
       uses: jakejarvis/s3-sync-action@master
       with:
-        # REMOVED: --acl public-read (This caused the crash)
-        # KEPT: --delete and --region
+        # Uploads everything, including the new .wasm file
         args: --follow-symlinks --delete --region ap-south-1
       env:
         AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
