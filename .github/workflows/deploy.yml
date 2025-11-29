@@ -32,20 +32,19 @@ jobs:
     # 4. Compile the Game (Build Step)
     - name: Build WebAssembly
       run: |
-        # Compiles main.py -> build/web/
         pygbag --build $GITHUB_WORKSPACE/main.py
 
-    # 5. Inject your Cyberpunk HTML (The Polish)
+    # 5. Inject your Cyberpunk HTML
     - name: Inject Custom UI
       run: |
-        # Overwrite the default index.html with your custom one
         cp index.html build/web/index.html
 
-    # 6. Deploy to AWS S3
+    # 6. Deploy to AWS S3 (FIXED: Added Region Here)
     - name: Sync to S3 Bucket
       uses: jakejarvis/s3-sync-action@master
       with:
-        args: --acl public-read --follow-symlinks --delete
+        # NOTICE: --region ap-south-1 is added at the end of this line
+        args: --acl public-read --follow-symlinks --delete --region ap-south-1
       env:
         AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
