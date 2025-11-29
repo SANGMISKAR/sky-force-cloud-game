@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SKY FORCE: CLOUD EDITION</title>
+    <style>
+        /* --- CORE LAYOUT --- */
+        body { 
+            margin: 0; 
+            background: #020205; 
+            font-family: 'Courier New', monospace; 
+            overflow: hidden; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            user-select: none;
+        }
+
+        /* --- THE GAME CANVAS --- */
+        canvas {
+            display: block;
+            background-color: #000;
+            box-shadow: 0 0 100px rgba(0, 150, 255, 0.3);
+            /* Initially hidden or blurred until game starts for effect */
+            transition: all 1s ease;
+        }
+
+        /* --- BACKGROUND ANIMATION (CSS Stars) --- */
+        .stars, .stars2, .stars3 {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+        }
+        .stars { background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; animation: move-stars 200s linear infinite; }
+        .stars2 { background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; animation: move-stars 100s linear infinite; opacity: 0.6; }
+        .stars3 { background: transparent url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1231630/stars.png') repeat top center; animation: move-stars 50s linear infinite; opacity: 0.4; }
+
+        @keyframes move-stars { from {background-position:0 0;} to {background-position:0 10000px;} }
+
+        /* --- CRT SCANLINE EFFECT --- */
+        .scanlines {
+            position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        /* --- MAIN MENU CONTAINER --- */
+        #main-menu {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(2, 2, 5, 0.85); /* Dark overlay */
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            transition: opacity 0.8s ease;
+        }
+
+        /* --- LOGO TYPOGRAPHY --- */
+        h1.game-title {
+            font-size: 60px;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 10px;
+            color: #fff;
+            text-shadow: 
+                0 0 5px #fff,
+                0 0 10px #fff,
+                0 0 20px #00d2ff,
+                0 0 40px #00d2ff,
+                0 0 80px #00d2ff;
+            animation: pulse-glow 2s infinite alternate;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #00d2ff;
+            letter-spacing: 5px;
+            margin-bottom: 50px;
+            opacity: 0.8;
+        }
+
+        @keyframes pulse-glow {
+            from { text-shadow: 0 0 10px #fff, 0 0 20px #00d2ff; }
+            to { text-shadow: 0 0 20px #fff, 0 0 40px #00d2ff, 0 0 60px #00d2ff; }
+        }
+
+        /* --- LOADING BAR --- */
+        .loader-container {
+            width: 300px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .loader-bar {
+            width: 0%;
+            height: 100%;
+            background: #00d2ff;
+            box-shadow: 0 0 10px #00d2ff;
+            transition: width 0.2s;
+            animation: load-anim 3s ease-out forwards; /* Fake load animation */
+        }
+        @keyframes load-anim { 0% { width: 0%; } 50% { width: 60%; } 80% { width: 80%; } 100% { width: 90%; } }
+
+        #status-text {
+            font-size: 12px; color: #888; letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        /* --- PLAY BUTTON --- */
+        #btn-play {
+            background: transparent;
+            border: 2px solid #00d2ff;
+            color: #00d2ff;
+            padding: 15px 50px;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+            transition: all 0.3s;
+            display: none; /* Hidden until ready */
+        }
+        #btn-play:hover {
+            background: #00d2ff;
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.8);
+        }
+
+    </style>
+    <script src="https://pygame-web.github.io/archives/0.8/pythons.js" type="module"></script>
+</head>
+<body>
+
+    <div class="stars"></div>
+    <div class="stars2"></div>
+    <div class="stars3"></div>
+    <div class="scanlines"></div>
+
+    <div id="main-menu">
+        <h1 class="game-title">SKY FORCE</h1>
+        <div class="subtitle">CLOUD BATTLE EDITION</div>
+
+        <div id="loading-ui">
+            <div class="loader-container">
+                <div id="loader-bar" class="loader-bar"></div>
+            </div>
+            <div id="status-text">INITIALIZING SYSTEMS...</div>
+        </div>
+
+        <button id="btn-play" onclick="startGame()">INITIATE LAUNCH</button>
+    </div>
+
+    <canvas id="canvas" tabindex="0"></canvas>
+
+    <script type="text/javascript">
+        function startGame() {
+            // 1. Fade out the menu
+            const menu = document.getElementById('main-menu');
+            menu.style.opacity = '0';
+            
+            // 2. Remove menu from DOM after fade (so it doesn't block clicks)
+            setTimeout(() => {
+                menu.style.display = 'none';
+            }, 800);
+
+            // 3. Focus and Audio
+            const canvas = document.getElementById('canvas');
+            canvas.focus();
+            window.Module.resumeAudio(); 
+        }
+
+        // Wait for Python to be ready
+        window.addEventListener("load", function() {
+            window.addEventListener("pygbag_ready", function() {
+                // When Python is ready:
+                // 1. Finish the loading bar visual
+                document.getElementById('loader-bar').style.width = '100%';
+                document.getElementById('loader-bar').style.animation = 'none';
+                
+                // 2. Hide loader, Show Button
+                setTimeout(() => {
+                    document.getElementById('loading-ui').style.display = 'none';
+                    document.getElementById('btn-play').style.display = 'block';
+                }, 500);
+            });
+        });
+    </script>
+
+</body>
+</html>
