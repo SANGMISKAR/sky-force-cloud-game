@@ -39,12 +39,13 @@ jobs:
       run: |
         cp index.html build/web/index.html
 
-    # 6. Deploy to AWS S3 (FIXED: Added Region Here)
+    # 6. Deploy to AWS S3 (FIXED: Removed ACL)
     - name: Sync to S3 Bucket
       uses: jakejarvis/s3-sync-action@master
       with:
-        # NOTICE: --region ap-south-1 is added at the end of this line
-        args: --acl public-read --follow-symlinks --delete --region ap-south-1
+        # REMOVED: --acl public-read (This caused the crash)
+        # KEPT: --delete and --region
+        args: --follow-symlinks --delete --region ap-south-1
       env:
         AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
