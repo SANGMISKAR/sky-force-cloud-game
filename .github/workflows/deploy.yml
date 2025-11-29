@@ -29,7 +29,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install pygbag
 
-    # 4. Compile the Game (Build Step)
+    # 4. Compile the Game
     - name: Build WebAssembly
       run: |
         pygbag --build $GITHUB_WORKSPACE/main.py
@@ -39,20 +39,22 @@ jobs:
       run: |
         cp index.html build/web/index.html
 
-    # 6. [FIXED] Download Correct Engine Files (Version 0.9)
+    # 6. [FIXED] Download Generic Engine Files
     - name: Fetch Runtime Engine
       run: |
-        echo "Downloading working engine files..."
+        echo "Downloading engine files..."
         cd build/web
         
-        # Remove any broken files first
-        rm -f pythons.js python311.wasm
+        # Remove old/broken files
+        rm -f pythons.js python*.wasm
         
-        # Download valid files from version 0.9 (Use -fL to fail on error)
+        # Download the standard JS loader
         curl -fL -o pythons.js https://pygame-web.github.io/archives/0.9/pythons.js
-        curl -fL -o python311.wasm https://pygame-web.github.io/archives/0.9/python311.wasm
         
-        # Verify file sizes (For logs)
+        # Download the GENERIC wasm file (This usually points to the correct version)
+        # We try 'python.wasm' which is the standard link
+        curl -fL -o python.wasm https://pygame-web.github.io/archives/0.9/python.wasm
+        
         ls -lh
 
     # 7. Deploy to AWS S3
